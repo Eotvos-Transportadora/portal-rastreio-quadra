@@ -1,30 +1,30 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbw19nBjnqtdmuaRPCkdZTBRQ4ItCxnfXQ-fRvS1V9JdCQWsf8JkQ_s2H-yy9XA2Kg753w/exec';
 
+let AUTH = {
+  usuario: '',
+  senha: '',
+  cliente: ''
+};
 const CLIENTES_VALIDOS = ['QUADRA', 'ITAPOAN'];
-function obterClientePortal() {
-  let cliente = localStorage.getItem('clientePortal');
+function fazerLogin() {
+  const usuario = prompt('Usuário (ex: QUADRA ou ITAPOAN)');
+  const senha = prompt('Senha de acesso');
 
-  if (cliente && CLIENTES_VALIDOS.includes(cliente)) {
-    return cliente;
+  if (!usuario || !senha) {
+    alert('Login inválido');
+    return false;
   }
 
-  cliente = prompt('Informe o código de acesso do cliente: QUADRA ou ITAPOAN');
+  AUTH.usuario = usuario.trim().toUpperCase();
+  AUTH.senha = senha.trim();
 
-  cliente = String(cliente || '').trim().toUpperCase();
-
-  if (!CLIENTES_VALIDOS.includes(cliente)) {
-    alert('Código de cliente inválido.');
-    localStorage.removeItem('clientePortal');
-    return '';
-  }
-
-  localStorage.setItem('clientePortal', cliente);
-  return cliente;
+  return true;
 }
 function trocarCliente() {
-  localStorage.removeItem('clientePortal');
-  obterClientePortal();
+  AUTH = { usuario: '', senha: '', cliente: '' };
+  alert('Faça login novamente.');
 }
+
 const searchForm = document.getElementById('searchForm');
 const queryInput = document.getElementById('queryInput');
 const feedback = document.getElementById('feedback');
@@ -49,6 +49,12 @@ searchForm.addEventListener('submit', async (e) => {
 });
 
 async function requestSearch(query) {
+  if (!AUTH.usuario) {
+    const ok = fazerLogin();
+    if (!ok) throw new Error('Login necessário');
+  }
+
+  const url = `${API_URL}?usuario=${encodeURIComponent(AUTH.usuario)}&senha=${encodeURIComponent(AUTH.senha)}&query=${encodeURIComponent(query)}`;
   const clientePortal = obterClientePortal();
 
   if (!clientePortal) {
